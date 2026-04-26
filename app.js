@@ -211,7 +211,8 @@ function initReveal() {
 
 /* ==================== ADMIN — 认证 ==================== */
 
-const ADMIN_PASSWORD = '047123100'; // ← 装饰用，非安保密码
+// 仅用于 local 模式的后备密码；GitHub 模式以动账密码解密 token 为准
+const ADMIN_PASSWORD = 'banwei2023';
 
 function toggleAdmin() {
   const zone = document.getElementById('zone-admin');
@@ -219,30 +220,38 @@ function toggleAdmin() {
   if (isOpen) zone.scrollIntoView({ behavior: 'smooth' });
 }
 
-function doAuth() {
-  const val     = document.getElementById('authInput').value;
+async function doAuth() {
+  const pass    = document.getElementById('authInput').value;
   const alertEl = document.getElementById('authAlert');
+  const btn     = document.getElementById('authBtn');
 
-  if (val !== ADMIN_PASSWORD) {
-    alertEl.innerHTML = '<div class="alert alert-error">密码错误，请重试</div>';
-    document.getElementById('authInput').value = '';
-    setTimeout(() => { alertEl.innerHTML = ''; }, 2000);
+  alertEl.innerHTML = '';
+  if (!pass) {
+    alertEl.innerHTML = '<div class="alert alert-error">请输入动账密码</div>';
     return;
   }
 
-  // GitHub 模式：校验 token 不为空
-  if (typeof MODE !== 'undefined' && MODE === 'github') {
-    const token = document.getElementById('tokenInput').value.trim();
-    if (!token) {
-      alertEl.innerHTML = '<div class="alert alert-error">GitHub 模式下请填写 Token</div>';
-      return;
-    }
-    setGithubToken(token);
-  }
+  btn.disabled = true;
+  btn.textContent = '验证中…';
 
-  adminAuthed = true;
-  document.getElementById('authBox').style.display   = 'none';
-  document.getElementById('adminPanel').classList.add('open');
+  try {
+    if (typeof MODE !== 'undefined' && MODE === 'github') {
+      // GitHub 模式：用动账密码解密 config.json 中的加密 token
+      await unlockWithPassphrase(pass);
+    } else {
+      // 本地模式：简单密码校验
+      if (pass !== ADMIN_PASSWORD) throw new Error('密码错误，请重试');
+    }
+    adminAuthed = true;
+    document.getElementById('authBox').style.display = 'none';
+    document.getElementById('adminPanel').classList.add('open');
+  } catch (err) {
+    alertEl.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+    document.getElementById('authInput').value = '';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '进入管理后台';
+  }
 }
 
 function doLogout() {
@@ -492,14 +501,7 @@ async function init() {
   initTheme();
 
   const isGithub = typeof MODE !== 'undefined' && MODE === 'github';
-
-  // 标注当前数据模式
   document.getElementById('modeBadge').textContent = isGithub ? 'GitHub 模式' : 'Local 模式';
-
-  // GitHub 模式下显示 Token 输入框
-  if (isGithub) {
-    document.getElementById('tokenGroup').style.display = 'block';
-  }
 
   try {
     BILLS = await loadBills();

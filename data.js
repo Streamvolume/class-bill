@@ -14,11 +14,11 @@
 
 /* ==================== 配置区 ==================== */
 
-const MODE = 'github'; // 切换为 'github' 启用 GitHub 模式
+const MODE = 'local'; // 切换为 'github' 启用 GitHub 模式
 
 const GITHUB_CONFIG = {
-  owner: 'Streamvolume',   // ← GitHub 用户名
-  repo:  'class-bill',          // ← 仓库名
+  owner: 'your-github-username',   // ← GitHub 用户名
+  repo:  'banfei-public',          // ← 仓库名
   path:  'bills.json',             // ← 数据文件路径
   token: '',                       // ← 班委各自填入自己的 Personal Access Token
   branch: 'main',
@@ -27,10 +27,10 @@ const GITHUB_CONFIG = {
 /* ==================== 元信息 ==================== */
 
 const META = {
-  class_name:    '药学2023级231班',
+  class_name:    '药学2023级X班',
   academic_year: '2023-2027',
   enroll_date:   '2023-09-01',
-  headcount:     42,
+  headcount:     45,
   currency:      'CNY',
 };
 
@@ -144,47 +144,100 @@ function localSave(bills) {
   localStorage.setItem(LOCAL_KEY, JSON.stringify(bills));
 }
 
+/* ==================== AES-GCM 加解密 ==================== */
+/*
+ * 安全模型：
+ *   - GitHub Token 经 AES-GCM + PBKDF2 加密后存入仓库 config.json（公开但无意义）
+ *   - 班委输入动账密码 → 浏览器解密 → Token 注入内存 → 会话结束即消失
+ *   - Token 永不以明文形式出现在代码、仓库或网络请求 URL 中
+ */
+
+async function _deriveKey(password, salt) {
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(password),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+/**
+ * decryptToken(encryptedB64, password) → Promise<string>
+ * 解密失败（密码错误）时抛出 DOMException，由调用方捕获转为用户提示
+ */
+async function decryptToken(encryptedB64, password) {
+  const packed = Uint8Array.from(atob(encryptedB64), c => c.charCodeAt(0));
+  const salt   = packed.slice(0, 16);
+  const iv     = packed.slice(16, 28);
+  const ct     = packed.slice(28);
+  const key    = await _deriveKey(password, salt);
+  const plain  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+  return new TextDecoder().decode(plain);
+}
+
 /* ==================== GitHub 模式 ==================== */
 
-let _githubSha = null;      // 当前文件 SHA，写回时需要
-let _runtimeToken = '';     // 班委登录时输入，仅存内存，不持久化
+let _githubSha    = null;  // 当前 bills.json SHA，写回时必须提供
+let _runtimeToken = '';    // 解密后的 Token，仅存内存，页面关闭即清除
+let _encryptedToken = '';  // 从 config.json 读取的加密串，缓存避免重复请求
 
-/** 供 app.js 在认证时注入 token */
-function setGithubToken(token) {
-  _runtimeToken = token.trim();
+/** 从仓库获取 config.json 并缓存加密串 */
+async function _loadEncryptedToken() {
+  if (_encryptedToken) return _encryptedToken;
+  const { owner, repo, branch } = GITHUB_CONFIG;
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/config.json?ref=${branch}&t=${Date.now()}`;
+  const res = await fetch(url, { headers: { Accept: 'application/vnd.github.v3+json' } });
+  if (!res.ok) throw new Error(`config.json 读取失败：${res.status}，请确认文件已上传至仓库根目录`);
+  const json = await res.json();
+  const config = JSON.parse(atob(json.content.replace(/\n/g, '')));
+  if (!config.encrypted_token) throw new Error('config.json 格式错误，缺少 encrypted_token 字段');
+  _encryptedToken = config.encrypted_token;
+  return _encryptedToken;
+}
+
+/**
+ * unlockWithPassphrase(passphrase) → Promise<void>
+ * 用动账密码解密 Token，成功后注入 _runtimeToken
+ * 失败时抛出 Error（密码错误或网络问题）
+ */
+async function unlockWithPassphrase(passphrase) {
+  const enc = await _loadEncryptedToken();
+  try {
+    _runtimeToken = await decryptToken(enc, passphrase);
+  } catch {
+    throw new Error('动账密码错误，解密失败');
+  }
 }
 
 /**
  * 读取：公开仓库无需 token，不发 Authorization 头
- * 避免 401
  */
 async function githubLoad() {
   const { owner, repo, path, branch } = GITHUB_CONFIG;
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}&t=${Date.now()}`;
-  const res = await fetch(url, {
-    headers: { Accept: 'application/vnd.github.v3+json' },
-  });
-  if (!res.ok) throw new Error(`GitHub 读取失败：${res.status} ${res.statusText}`);
+  const res = await fetch(url, { headers: { Accept: 'application/vnd.github.v3+json' } });
+  if (!res.ok) throw new Error(`账单读取失败：${res.status} ${res.statusText}`);
   const json = await res.json();
   _githubSha = json.sha;
-  const decoded = atob(json.content.replace(/\n/g, ''));
-  return JSON.parse(decoded);
+  return JSON.parse(atob(json.content.replace(/\n/g, '')));
 }
 
 /**
- * 写入：需要 token，从运行时内存取
- * token 由班委登录时输入，不写入代码也不持久化
+ * 写入：使用内存中的 Token
  */
 async function githubSave(bills) {
-  if (!_runtimeToken) throw new Error('请先在后台输入 GitHub Token 再进行写入操作');
+  if (!_runtimeToken) throw new Error('会话已过期，请重新登录后台');
   const { owner, repo, path, branch } = GITHUB_CONFIG;
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+  const url     = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(bills, null, 2))));
-  const body = {
-    message: `班费更新 ${new Date().toISOString().slice(0, 10)}`,
-    content, branch,
-    sha: _githubSha,
-  };
   const res = await fetch(url, {
     method: 'PUT',
     headers: {
@@ -192,14 +245,17 @@ async function githubSave(bills) {
       Accept: 'application/vnd.github.v3+json',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      message: `班费更新 ${new Date().toISOString().slice(0, 10)}`,
+      content, branch,
+      sha: _githubSha,
+    }),
   });
   if (!res.ok) {
     const errJson = await res.json().catch(() => ({}));
-    throw new Error(`GitHub 写入失败：${res.status} ${errJson.message || res.statusText}`);
+    throw new Error(`写入失败：${res.status} ${errJson.message || res.statusText}`);
   }
-  const json = await res.json();
-  _githubSha = json.content.sha;
+  _githubSha = (await res.json()).content.sha;
 }
 
 /* ==================== 统一公开接口 ==================== */

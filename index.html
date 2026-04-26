@@ -125,28 +125,17 @@
     <h3>班委验证</h3>
     <div id="authAlert"></div>
     <div class="field-group">
-      <label class="field-label">管理密码</label>
+      <label class="field-label">动账密码</label>
       <input type="password" class="field-input" id="authInput"
-             placeholder="班委密码"
+             placeholder="输入动账密码"
              onkeydown="if(event.key==='Enter') doAuth()">
-    </div>
-    <!-- GitHub 模式下显示 Token 输入框 -->
-    <div class="field-group" id="tokenGroup" style="display:none">
-      <label class="field-label">
-        GitHub Token
-        <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0">
-          （写入权限，仅存内存）
-        </span>
-      </label>
-      <input type="password" class="field-input" id="tokenInput"
-             placeholder="动账密钥"
-             onkeydown="if(event.key==='Enter') doAuth()">
-      <div style="font-size:0.7rem;color:var(--text-3);margin-top:0.35rem;line-height:1.5">
-        前往 GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens<br>
-        权限勾选：Contents → Read and write
+      <div style="font-size:0.7rem;color:var(--text-3);margin-top:0.4rem;line-height:1.5">
+        GitHub 模式下，动账密码将在本地解密凭证，不会发送到任何服务器
       </div>
     </div>
-    <button class="btn-primary" style="width:100%" onclick="doAuth()">进入管理后台</button>
+    <button class="btn-primary" id="authBtn" style="width:100%" onclick="doAuth()">
+      进入管理后台
+    </button>
   </div>
 
   <!-- 管理面板（解锁后显示） -->
