@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 — 班费平台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
+
+<div class="admin-page">
+
+  <!-- ===== 顶部导航栏 ===== -->
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <div class="admin-logo">班费<span>后台</span></div>
+      <div class="mode-badge" id="modeBadge" style="position:static;transform:none">—</div>
+    </div>
+    <div class="admin-header-right">
+      <a href="index.html" class="btn-secondary" style="font-size:0.78rem;padding:0.4rem 0.85rem;text-decoration:none">
+        ← 公示页
+      </a>
+      <button class="btn-danger" style="font-size:0.78rem;padding:0.4rem 0.85rem" onclick="doLogout()">
+        退出登录
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== 主体区域 ===== -->
+  <main class="admin-body">
+
+    <!-- 快速统计条 -->
+    <div class="admin-stats-strip" id="adminStatsStrip">
+      <div class="admin-stat">
+        <div class="admin-stat-label">账户余额</div>
+        <div class="admin-stat-value" id="aStatBalance">—</div>
+      </div>
+      <div class="admin-stat">
+        <div class="admin-stat-label">人均剩余</div>
+        <div class="admin-stat-value" id="aStatPer">—</div>
+      </div>
+      <div class="admin-stat">
+        <div class="admin-stat-label">出账次数</div>
+        <div class="admin-stat-value" id="aStatCount">—</div>
+      </div>
+      <div class="admin-stat">
+        <div class="admin-stat-label">待确认</div>
+        <div class="admin-stat-value" id="aStatPending" style="color:var(--accent-2)">—</div>
+      </div>
+    </div>
+
+    <!-- 操作按钮行 -->
+    <div class="admin-actions" style="margin-bottom:1.25rem">
+      <button class="btn-primary" style="padding:0.5rem 1.1rem;font-size:0.85rem" onclick="toggleAddForm()">
+        ＋ 新增账单
+      </button>
+      <button class="theme-switcher" id="themeSwitcher" onclick="nextTheme()"
+        style="position:static;transform:none;padding:0.4rem 0.85rem;font-size:0.7rem">—</button>
+    </div>
+
+    <!-- 新增 / 编辑 表单（折叠） -->
+    <div id="addForm" class="form-panel" style="display:none">
+      <h3 id="formTitle" style="font-family:var(--font-display);font-size:1rem;margin-bottom:1.25rem">新增账单条目</h3>
+      <div id="formAlert"></div>
+      <div class="form-grid">
+        <div class="field-group">
+          <label class="field-label">日期</label>
+          <input type="date" class="field-input" id="fDate">
+        </div>
+        <div class="field-group">
+          <label class="field-label">类型</label>
+          <select class="field-input" id="fType">
+            <option value="income_collective">集体缴费（主要入账）</option>
+            <option value="income_activity">活动筹款（次要入账）</option>
+            <option value="income_surplus">活动结余归还</option>
+            <option value="expense" selected>出账</option>
+            <option value="refund">冲账 / 退款</option>
+            <option value="balance_init">期初余额（迁移用）</option>
+          </select>
+        </div>
+        <div class="field-group col-span-2">
+          <label class="field-label">摘要标题</label>
+          <input type="text" class="field-input" id="fTitle" placeholder="如：元旦晚会道具采购">
+        </div>
+        <div class="field-group">
+          <label class="field-label">金额（元）</label>
+          <input type="number" class="field-input" id="fAmount" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="field-group">
+          <label class="field-label">关联活动（选填）</label>
+          <input type="text" class="field-input" id="fActivity" placeholder="如：2024元旦晚会">
+        </div>
+        <div class="field-group">
+          <label class="field-label">标签（逗号分隔）</label>
+          <input type="text" class="field-input" id="fTags" placeholder="如：日常, 采购">
+        </div>
+        <div class="field-group">
+          <label class="field-label">经办人角色</label>
+          <input type="text" class="field-input" id="fRole" placeholder="如：生活委员">
+        </div>
+        <div class="field-group col-span-2">
+          <label class="field-label">备注（选填）</label>
+          <input type="text" class="field-input" id="fNote" placeholder="补充说明">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" id="submitBtn" onclick="submitEntry()">提交（待确认状态）</button>
+        <button class="btn-secondary" onclick="hideAddForm()">取消</button>
+      </div>
+    </div>
+
+    <!-- Tab 导航 -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-atab="all" onclick="switchTab(this)">全部账单</button>
+      <button class="admin-tab" data-atab="pending" onclick="switchTab(this)">
+        待确认 <span id="pendingBadge" style="color:var(--accent-2)"></span>
+      </button>
+    </div>
+
+    <!-- 全部账单列表 -->
+    <div id="tabAll">
+      <!-- 筛选 -->
+      <div class="filter-tabs" id="adminFilterTabs" style="margin-bottom:1rem">
+        <button class="tab active" data-filter="all">全部</button>
+        <button class="tab" data-filter="income">入账</button>
+        <button class="tab" data-filter="expense">出账</button>
+      </div>
+      <!-- 桌面表格 -->
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>日期</th><th>类型</th><th>摘要</th><th>标签</th><th>金额</th><th>核实</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="adminLedgerBody"></tbody>
+      </table>
+      <!-- 移动卡片 -->
+      <div class="ledger-cards" id="adminLedgerCards"></div>
+    </div>
+
+    <!-- 待确认列表 -->
+    <div id="tabPending" style="display:none">
+      <div class="pending-list" id="pendingList"></div>
+    </div>
+
+  </main>
+
+  <!-- ===== 底栏 ===== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <div class="footer-col-title">关于本站</div>
+        <p>班费公示平台 v2</p>
+        <p>数据托管于 GitHub，公开透明</p>
+        <p>每次动账由班委核实确认</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">联系方式</div>
+        <p>管理员：生活委员</p>
+        <a href="mailto:your@email.com">your@email.com</a>
+        <p style="margin-top:0.25rem;font-size:0.72rem">如有疑问请联系班委</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">友情链接</div>
+        <a href="https://www.njucm.edu.cn" target="_blank" rel="noopener">南京中医药大学官网</a>
+        <a href="https://github.com/Streamvolume/class-bill" target="_blank" rel="noopener">数据仓库 GitHub</a>
+        <a href="https://pages.github.com" target="_blank" rel="noopener">托管：GitHub Pages</a>
+      </div>
+    </div>
+    <hr class="footer-divider">
+    <div class="footer-bottom">
+      <span>班费公示平台 · 药学2023级X班</span>
+      <span>Built by Streamvolume · Hosted on GitHub Pages</span>
+    </div>
+  </footer>
+
+</div><!-- /admin-page -->
+
+<script src="themes.js"></script>
+<script src="data.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

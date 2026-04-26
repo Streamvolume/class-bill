@@ -10,32 +10,29 @@
 </head>
 <body>
 
-<!-- Loading overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="loading-spinner"></div>
-</div>
-
-<!-- Mode indicator -->
+<div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
 <div class="mode-badge" id="modeBadge">—</div>
 
-<!-- ===================================================
-     ZONE 1 — 英雄区（首屏公示）
-==================================================== -->
+<!-- 侧栏班委入口 -->
+<div class="sidebar-admin">
+  <a class="sidebar-admin-btn" href="admin-login.html" title="班委管理后台">
+    <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="6" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+      <path d="M4.5 6V4a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+    </svg>
+    班委入口
+  </a>
+</div>
+
+<!-- ZONE 1: 英雄区 -->
 <section id="zone-hero">
-
-  <!-- 浮动背景卡片容器 -->
   <div class="hero-bg" id="heroBg"></div>
-  <!-- 背景辉光 -->
   <div class="hero-glow"></div>
-
   <div class="hero-content">
-    <!-- 班级标识 -->
     <div class="hero-header">
       <div class="class-badge" id="classBadge">加载中…</div>
       <div class="platform-title">班费公示平台</div>
     </div>
-
-    <!-- 四项统计卡片 -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">入学至今</div>
@@ -59,190 +56,69 @@
       </div>
     </div>
   </div>
-
-  <!-- 向下滚动提示 -->
-  <div class="scroll-hint"
-       onclick="document.getElementById('zone-ledger').scrollIntoView({behavior:'smooth'})">
+  <div class="scroll-hint" onclick="document.getElementById('zone-ledger').scrollIntoView({behavior:'smooth'})">
     <span>查看明细</span>
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path d="M7 2v10M2 8l5 5 5-5"
-            stroke="currentColor" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7 2v10M2 8l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </div>
 </section>
 
-<!-- ===================================================
-     ZONE 2 — 明细区（完整账单，只读）
-==================================================== -->
+<!-- ZONE 2: 明细区（只读） -->
 <section id="zone-ledger">
-
   <div class="reveal">
     <div class="section-label">完整账单</div>
     <div class="section-title">收支明细</div>
   </div>
-
-  <!-- 筛选 Tab -->
   <div class="filter-tabs reveal" id="filterTabs">
     <button class="tab active" data-filter="all">全部</button>
     <button class="tab" data-filter="income">入账</button>
     <button class="tab" data-filter="expense">出账</button>
     <button class="tab" data-filter="unconfirmed">待确认</button>
   </div>
-
-  <!-- 桌面端：表格 -->
   <table class="ledger-table reveal">
     <thead>
       <tr>
-        <th>日期</th>
-        <th>类型</th>
-        <th>摘要</th>
-        <th>标签</th>
-        <th>金额（元）</th>
-        <th>核实</th>
+        <th>日期</th><th>类型</th><th>摘要</th><th>标签</th><th>金额（元）</th><th>核实</th>
       </tr>
     </thead>
     <tbody id="ledgerBody"></tbody>
   </table>
-
-  <!-- 移动端：卡片列表（由 CSS 媒体查询控制显示） -->
   <div class="ledger-cards reveal" id="ledgerCards"></div>
-
 </section>
 
-<!-- 班委入口（低调放在底部） -->
-<div class="admin-entry">
-  <button class="admin-entry-btn" onclick="toggleAdmin()">班委入口 ↗</button>
-</div>
-
-<!-- ===================================================
-     ZONE 3 — 管理区（班委后台）
-==================================================== -->
-<section id="zone-admin">
-
-  <!-- 认证盒子 -->
-  <div id="authBox" class="auth-box">
-    <h3>班委验证</h3>
-    <div id="authAlert"></div>
-    <div class="field-group">
-      <label class="field-label">动账密码</label>
-      <input type="password" class="field-input" id="authInput"
-             placeholder="输入动账密码"
-             onkeydown="if(event.key==='Enter') doAuth()">
-      <div style="font-size:0.7rem;color:var(--text-3);margin-top:0.4rem;line-height:1.5">
-        GitHub 模式下，动账密码将在本地解密凭证，不会发送到任何服务器
-      </div>
+<!-- 底栏 -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-col">
+      <div class="footer-col-title">关于本站</div>
+      <p>班费公示平台 v2</p>
+      <p>数据托管于 GitHub，公开透明</p>
+      <p>每次动账由班委核实确认</p>
     </div>
-    <button class="btn-primary" id="authBtn" style="width:100%" onclick="doAuth()">
-      进入管理后台
-    </button>
+    <div class="footer-col">
+      <div class="footer-col-title">联系方式</div>
+      <p>管理员：生活委员</p>
+      <a href="mailto:your@email.com">your@email.com</a>
+      <p style="margin-top:0.25rem;font-size:0.72rem">如有疑问请联系班委</p>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">友情链接</div>
+      <a href="https://www.njucm.edu.cn" target="_blank" rel="noopener">南京中医药大学官网</a>
+      <a href="https://github.com/Streamvolume/class-bill" target="_blank" rel="noopener">数据仓库 GitHub</a>
+      <a href="https://pages.github.com" target="_blank" rel="noopener">托管：GitHub Pages</a>
+    </div>
   </div>
+  <hr class="footer-divider">
+  <div class="footer-bottom">
+    <span>班费公示平台 · 药学2023级X班</span>
+    <span>Built by Streamvolume · Hosted on GitHub Pages</span>
+  </div>
+</footer>
 
-  <!-- 管理面板（解锁后显示） -->
-  <div id="adminPanel" class="admin-panel">
-
-    <div class="section-label">班委后台</div>
-    <div class="section-title" style="margin-bottom:1.5rem">账单管理</div>
-
-    <!-- 操作按钮组 -->
-    <div class="admin-actions">
-      <button class="btn-secondary" onclick="toggleAddForm()">＋ 新增账单</button>
-      <button class="btn-secondary" onclick="togglePending()">待确认列表</button>
-      <button class="btn-secondary" onclick="toggleAllBills()">全部账单</button>
-      <button class="btn-secondary" onclick="doLogout()">退出登录</button>
-    </div>
-
-    <!-- ── 新增 / 编辑 表单（复用） ── -->
-    <div id="addForm" class="form-card" style="display:none">
-      <h3 id="formTitle">新增账单条目</h3>
-      <div id="formAlert"></div>
-
-      <div class="form-grid">
-        <div class="field-group">
-          <label class="field-label">日期</label>
-          <input type="date" class="field-input" id="fDate">
-        </div>
-        <div class="field-group">
-          <label class="field-label">类型</label>
-          <select class="field-input" id="fType">
-            <option value="income_collective">集体缴费（主要入账）</option>
-            <option value="income_activity">活动筹款（次要入账）</option>
-            <option value="income_surplus">活动结余归还</option>
-            <option value="expense" selected>出账</option>
-            <option value="refund">冲账 / 退款</option>
-            <option value="balance_init">期初余额（迁移用）</option>
-          </select>
-        </div>
-
-        <div class="field-group col-span-2">
-          <label class="field-label">摘要标题</label>
-          <input type="text" class="field-input" id="fTitle"
-                 placeholder="如：元旦晚会道具采购">
-        </div>
-
-        <div class="field-group">
-          <label class="field-label">金额（元）</label>
-          <input type="number" class="field-input" id="fAmount"
-                 placeholder="0.00" min="0" step="0.01">
-        </div>
-        <div class="field-group">
-          <label class="field-label">关联活动（选填）</label>
-          <input type="text" class="field-input" id="fActivity"
-                 placeholder="如：2024元旦晚会">
-        </div>
-
-        <div class="field-group">
-          <label class="field-label">标签（逗号分隔）</label>
-          <input type="text" class="field-input" id="fTags"
-                 placeholder="如：日常, 采购">
-        </div>
-        <div class="field-group">
-          <label class="field-label">经办人角色</label>
-          <input type="text" class="field-input" id="fRole"
-                 placeholder="如：生活委员">
-        </div>
-
-        <div class="field-group col-span-2">
-          <label class="field-label">备注（选填）</label>
-          <input type="text" class="field-input" id="fNote"
-                 placeholder="补充说明">
-        </div>
-      </div>
-
-      <div class="form-actions">
-        <button class="btn-primary" id="submitBtn" onclick="submitEntry()">
-          提交（待确认状态）
-        </button>
-        <button class="btn-secondary" onclick="hideAddForm()">取消</button>
-      </div>
-    </div>
-
-    <!-- ── 待确认列表 ── -->
-    <div id="pendingBox" class="form-card" style="display:none">
-      <h3>待确认账单</h3>
-      <div class="pending-list" id="pendingList"></div>
-    </div>
-
-    <!-- ── 全部账单管理列表 ── -->
-    <div id="allBillsBox" class="form-card" style="display:none">
-      <h3>全部账单（可编辑 / 删除）</h3>
-      <div class="pending-list" id="allBillsList"></div>
-    </div>
-
-  </div><!-- /adminPanel -->
-
-</section>
-
-<!-- 主题切换悬浮按钮 -->
 <button class="theme-switcher" id="themeSwitcher" onclick="nextTheme()">—</button>
-
-<!-- ===================================================
-     脚本：顺序不可调换
-       themes.js  →  data.js  →  app.js
-==================================================== -->
 <script src="themes.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
-
 </body>
 </html>
