@@ -14,11 +14,11 @@
 
 /* ==================== 配置区 ==================== */
 
-const MODE = 'local'; // 切换为 'github' 启用 GitHub 模式
+const MODE = 'github'; // 切换为 'github' 启用 GitHub 模式
 
 const GITHUB_CONFIG = {
-  owner: 'your-github-username',   // ← GitHub 用户名
-  repo:  'banfei-public',          // ← 仓库名
+  owner: 'Streamvolume',   // ← GitHub 用户名
+  repo:  'class-bill',          // ← 仓库名
   path:  'bills.json',             // ← 数据文件路径
   token: '',                       // ← 班委各自填入自己的 Personal Access Token
   branch: 'main',
@@ -27,10 +27,10 @@ const GITHUB_CONFIG = {
 /* ==================== 元信息 ==================== */
 
 const META = {
-  class_name:    '药学2023级X班',
+  class_name:    '2023级231班',
   academic_year: '2023-2027',
   enroll_date:   '2023-09-01',
-  headcount:     45,
+  headcount:     42,
   currency:      'CNY',
 };
 
