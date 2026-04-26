@@ -28,7 +28,7 @@
     offsetBottom:    0,
     scaleFactor:     0.95,
     idleMotionGroup: 'Idle',
-    focusSensitivity: 0.75,
+    focusSensitivity: 0.95,
 
     // 气泡侵入画布的像素数（移动端按比例缩小）
     bubbleInset:     isMobile ? 55 : 110,
