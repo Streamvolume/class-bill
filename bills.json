@@ -10,7 +10,7 @@
     ],
     "note": "",
     "paid_by_role": "班长",
-    "confirmed": false,
-    "confirmed_by": ""
+    "confirmed": true,
+    "confirmed_by": "班委核实"
   }
 ]
