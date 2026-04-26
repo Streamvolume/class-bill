@@ -87,5 +87,20 @@
     "paid_by_role": "团委书记",
     "confirmed": false,
     "confirmed_by": ""
+  },
+  {
+    "id": "T20260426-007",
+    "type": "expense",
+    "title": "工程制图纸采购",
+    "date": "2024-10-07",
+    "amount": 56.62,
+    "tags": [
+      "采购"
+    ],
+    "note": "",
+    "linked_activity": "工程制图课程",
+    "paid_by_role": "班长",
+    "confirmed": false,
+    "confirmed_by": ""
   }
 ]
