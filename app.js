@@ -212,7 +212,7 @@ function initReveal() {
 /* ==================== ADMIN — 认证 ==================== */
 
 // 仅用于 local 模式的后备密码；GitHub 模式以动账密码解密 token 为准
-const ADMIN_PASSWORD = 'banwei2023';
+const ADMIN_PASSWORD = 'Banwei047123100';
 
 function toggleAdmin() {
   const zone = document.getElementById('zone-admin');
