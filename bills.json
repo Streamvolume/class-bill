@@ -2,16 +2,16 @@
   {
     "id": "T20260426-001",
     "type": "income_collective",
-    "title": "集体筹集班费，每人50",
+    "title": "班费筹集",
     "date": "2023-09-01",
     "amount": 2100,
     "tags": [
       "启动资金"
     ],
-    "note": "",
+    "note": "每人50",
     "paid_by_role": "班长",
-    "confirmed": true,
-    "confirmed_by": "班委核实"
+    "confirmed": false,
+    "confirmed_by": ""
   },
   {
     "id": "T20260426-002",
