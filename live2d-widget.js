@@ -21,13 +21,13 @@
     offsetBottom:    0,
     scaleFactor:     0.95,
     idleMotionGroup: 'Idle',
-    focusSensitivity: 0.75,
+    focusSensitivity: 0.95,
 
     // 气泡右边缘侵入画布的像素数
     // 增大 → 气泡向右移（更靠近模型实体）
     // 减小 → 气泡向左移（远离画布）
     // 建议范围：60–180，根据你模型两侧透明空白宽度调整
-    bubbleInset: 110,
+    bubbleInset: 90,
     scripts: {
       cubismCore: 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js',
       pixiJs:     'https://cdn.jsdelivr.net/npm/pixi.js@6.5.2/dist/browser/pixi.min.js',
