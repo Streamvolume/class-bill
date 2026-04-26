@@ -11,7 +11,7 @@
     "note": "1",
     "linked_activity": "1",
     "paid_by_role": "1",
-    "confirmed": false,
-    "confirmed_by": ""
+    "confirmed": true,
+    "confirmed_by": "班委核实"
   }
 ]
