@@ -14,11 +14,11 @@
 
 /* ==================== 配置区 ==================== */
 
-const MODE = 'github'; // 切换为 'github' 启用 GitHub 模式
+const MODE = 'local'; // 切换为 'github' 启用 GitHub 模式
 
 const GITHUB_CONFIG = {
-  owner: 'Streamvolume',   // ← GitHub 用户名
-  repo:  'class-bill',          // ← 仓库名
+  owner: 'your-github-username',   // ← GitHub 用户名
+  repo:  'banfei-public',          // ← 仓库名
   path:  'bills.json',             // ← 数据文件路径
   token: '',                       // ← 班委各自填入自己的 Personal Access Token
   branch: 'main',
@@ -27,10 +27,10 @@ const GITHUB_CONFIG = {
 /* ==================== 元信息 ==================== */
 
 const META = {
-  class_name:    '药学2023级231班',
+  class_name:    '药学2023级X班',
   academic_year: '2023-2027',
   enroll_date:   '2023-09-01',
-  headcount:     42,
+  headcount:     45,
   currency:      'CNY',
 };
 
@@ -227,7 +227,8 @@ async function githubLoad() {
   if (!res.ok) throw new Error(`账单读取失败：${res.status} ${res.statusText}`);
   const json = await res.json();
   _githubSha = json.sha;
-  return JSON.parse(atob(json.content.replace(/\n/g, '')));
+  // atob() 返回原始字节串；escape/decodeURIComponent 将其正确还原为 UTF-8
+  return JSON.parse(decodeURIComponent(escape(atob(json.content.replace(/\n/g, '')))));
 }
 
 /**
