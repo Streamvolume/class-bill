@@ -39,7 +39,7 @@
     idleMotionGroup: 'Idle',
 
     // 鼠标跟随灵敏度（0 = 不跟随，1 = 完全跟随，建议 0.6-0.9）
-    focusSensitivity: 0.75,
+    focusSensitivity: 0.9,
 
     // CDN 脚本链接（按需替换为更稳定的镜像）
     scripts: {
