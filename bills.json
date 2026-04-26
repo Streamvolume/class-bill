@@ -57,5 +57,20 @@
     "paid_by_role": "班长",
     "confirmed": false,
     "confirmed_by": ""
+  },
+  {
+    "id": "T20260426-005",
+    "type": "expense",
+    "title": "羽毛球联谊赛奖品本班分摊",
+    "date": "2024-05-23",
+    "amount": 20.36,
+    "tags": [
+      "羽毛球联谊赛"
+    ],
+    "note": "生制班级分摊",
+    "linked_activity": "羽毛球联谊赛",
+    "paid_by_role": "班长",
+    "confirmed": false,
+    "confirmed_by": ""
   }
 ]
