@@ -130,6 +130,22 @@
              placeholder="输入班委密码"
              onkeydown="if(event.key==='Enter') doAuth()">
     </div>
+    <!-- GitHub 模式下显示 Token 输入框 -->
+    <div class="field-group" id="tokenGroup" style="display:none">
+      <label class="field-label">
+        GitHub Token
+        <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0">
+          （写入权限，仅存内存）
+        </span>
+      </label>
+      <input type="password" class="field-input" id="tokenInput"
+             placeholder="ghp_xxxxxxxxxxxx"
+             onkeydown="if(event.key==='Enter') doAuth()">
+      <div style="font-size:0.7rem;color:var(--text-3);margin-top:0.35rem;line-height:1.5">
+        前往 GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens<br>
+        权限勾选：Contents → Read and write
+      </div>
+    </div>
     <button class="btn-primary" style="width:100%" onclick="doAuth()">进入管理后台</button>
   </div>
 

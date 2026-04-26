@@ -222,15 +222,27 @@ function toggleAdmin() {
 function doAuth() {
   const val     = document.getElementById('authInput').value;
   const alertEl = document.getElementById('authAlert');
-  if (val === ADMIN_PASSWORD) {
-    adminAuthed = true;
-    document.getElementById('authBox').style.display   = 'none';
-    document.getElementById('adminPanel').classList.add('open');
-  } else {
+
+  if (val !== ADMIN_PASSWORD) {
     alertEl.innerHTML = '<div class="alert alert-error">密码错误，请重试</div>';
     document.getElementById('authInput').value = '';
     setTimeout(() => { alertEl.innerHTML = ''; }, 2000);
+    return;
   }
+
+  // GitHub 模式：校验 token 不为空
+  if (typeof MODE !== 'undefined' && MODE === 'github') {
+    const token = document.getElementById('tokenInput').value.trim();
+    if (!token) {
+      alertEl.innerHTML = '<div class="alert alert-error">GitHub 模式下请填写 Token</div>';
+      return;
+    }
+    setGithubToken(token);
+  }
+
+  adminAuthed = true;
+  document.getElementById('authBox').style.display   = 'none';
+  document.getElementById('adminPanel').classList.add('open');
 }
 
 function doLogout() {
@@ -479,10 +491,15 @@ async function deleteEntry(id) {
 async function init() {
   initTheme();
 
+  const isGithub = typeof MODE !== 'undefined' && MODE === 'github';
+
   // 标注当前数据模式
-  document.getElementById('modeBadge').textContent =
-    (typeof MODE !== 'undefined' ? MODE : 'local') === 'github'
-      ? 'GitHub 模式' : 'Local 模式';
+  document.getElementById('modeBadge').textContent = isGithub ? 'GitHub 模式' : 'Local 模式';
+
+  // GitHub 模式下显示 Token 输入框
+  if (isGithub) {
+    document.getElementById('tokenGroup').style.display = 'block';
+  }
 
   try {
     BILLS = await loadBills();

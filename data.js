@@ -14,11 +14,11 @@
 
 /* ==================== 配置区 ==================== */
 
-const MODE = 'github'; // 切换为 'github' 启用 GitHub 模式
+const MODE = 'local'; // 切换为 'github' 启用 GitHub 模式
 
 const GITHUB_CONFIG = {
-  owner: 'Streamvolume',   // ← GitHub 用户名
-  repo:  'class-bill',          // ← 仓库名
+  owner: 'your-github-username',   // ← GitHub 用户名
+  repo:  'banfei-public',          // ← 仓库名
   path:  'bills.json',             // ← 数据文件路径
   token: '',                       // ← 班委各自填入自己的 Personal Access Token
   branch: 'main',
@@ -27,10 +27,10 @@ const GITHUB_CONFIG = {
 /* ==================== 元信息 ==================== */
 
 const META = {
-  class_name:    '2023级231班',
+  class_name:    '药学2023级X班',
   academic_year: '2023-2027',
   enroll_date:   '2023-09-01',
-  headcount:     42,
+  headcount:     45,
   currency:      'CNY',
 };
 
@@ -146,16 +146,23 @@ function localSave(bills) {
 
 /* ==================== GitHub 模式 ==================== */
 
-let _githubSha = null; // 当前文件 SHA，写回时需要
+let _githubSha = null;      // 当前文件 SHA，写回时需要
+let _runtimeToken = '';     // 班委登录时输入，仅存内存，不持久化
 
+/** 供 app.js 在认证时注入 token */
+function setGithubToken(token) {
+  _runtimeToken = token.trim();
+}
+
+/**
+ * 读取：公开仓库无需 token，不发 Authorization 头
+ * 避免 401
+ */
 async function githubLoad() {
-  const { owner, repo, path, token, branch } = GITHUB_CONFIG;
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+  const { owner, repo, path, branch } = GITHUB_CONFIG;
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}&t=${Date.now()}`;
   const res = await fetch(url, {
-    headers: {
-      Authorization: `token ${token}`,
-      Accept: 'application/vnd.github.v3+json',
-    },
+    headers: { Accept: 'application/vnd.github.v3+json' },
   });
   if (!res.ok) throw new Error(`GitHub 读取失败：${res.status} ${res.statusText}`);
   const json = await res.json();
@@ -164,28 +171,35 @@ async function githubLoad() {
   return JSON.parse(decoded);
 }
 
+/**
+ * 写入：需要 token，从运行时内存取
+ * token 由班委登录时输入，不写入代码也不持久化
+ */
 async function githubSave(bills) {
-  const { owner, repo, path, token, branch } = GITHUB_CONFIG;
+  if (!_runtimeToken) throw new Error('请先在后台输入 GitHub Token 再进行写入操作');
+  const { owner, repo, path, branch } = GITHUB_CONFIG;
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(bills, null, 2))));
   const body = {
     message: `班费更新 ${new Date().toISOString().slice(0, 10)}`,
-    content,
-    branch,
+    content, branch,
     sha: _githubSha,
   };
   const res = await fetch(url, {
     method: 'PUT',
     headers: {
-      Authorization: `token ${token}`,
+      Authorization: `token ${_runtimeToken}`,
       Accept: 'application/vnd.github.v3+json',
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`GitHub 写入失败：${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    const errJson = await res.json().catch(() => ({}));
+    throw new Error(`GitHub 写入失败：${res.status} ${errJson.message || res.statusText}`);
+  }
   const json = await res.json();
-  _githubSha = json.content.sha; // 更新 SHA
+  _githubSha = json.content.sha;
 }
 
 /* ==================== 统一公开接口 ==================== */
