@@ -211,7 +211,7 @@ function initReveal() {
 
 /* ==================== ADMIN — 认证 ==================== */
 
-const ADMIN_PASSWORD = 'banwei2023'; // ← 可修改
+const ADMIN_PASSWORD = '047123100'; // ← 装饰用，非安保密码
 
 function toggleAdmin() {
   const zone = document.getElementById('zone-admin');
