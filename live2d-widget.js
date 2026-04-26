@@ -1,33 +1,38 @@
 /**
  * live2d-widget.js — 班费平台 Live2D 挂件
  *
- * 功能：
- *   - 右下角固定展示自制 Live2D 模型
- *   - 自动播放 Idle 待机动画，循环随机切换
- *   - 鼠标/触摸位置实时视线跟随
- *   - 点击模型触发随机动作 + 随机对话气泡
- *   - 进入页面自动显示欢迎词气泡（打字机效果）
- *   - 可折叠隐藏（双击挂件区域）
+ * 移动端适配：
+ *   - 自动检测小屏，缩小画布至 140×190，不遮挡内容
+ *   - 画布设置 touch-action: pan-y，允许页面正常上下滑动
+ *   - 双击（桌面）/ 双击快速连点（移动）均可折叠隐藏
+ *   - 气泡尺寸与位置随屏幕自适应
  */
 
 (function () {
+  /* ==================== 响应式判断 ==================== */
+
+  // 以 640px 为分界，或检测到触屏设备且屏宽较窄
+  const isMobile = window.matchMedia('(max-width: 640px)').matches
+                || (window.innerWidth < 768 && 'ontouchstart' in window);
+
   /* ==================== 配置 ==================== */
 
   const CONFIG = {
     modelUrl:        'https://raw.githubusercontent.com/Streamvolume/sg/main/sg1.model3.json',
-    canvasWidth:     280,
-    canvasHeight:    380,
-    offsetRight:     10,
+
+    // 桌面 / 移动端分别设置画布尺寸
+    canvasWidth:     isMobile ? 140 : 280,
+    canvasHeight:    isMobile ? 190 : 380,
+
+    offsetRight:     isMobile ? 0 : 10,
     offsetBottom:    0,
     scaleFactor:     0.95,
     idleMotionGroup: 'Idle',
-    focusSensitivity: 0.95,
+    focusSensitivity: 0.75,
 
-    // 气泡右边缘侵入画布的像素数
-    // 增大 → 气泡向右移（更靠近模型实体）
-    // 减小 → 气泡向左移（远离画布）
-    // 建议范围：60–180，根据你模型两侧透明空白宽度调整
-    bubbleInset: 90,
+    // 气泡侵入画布的像素数（移动端按比例缩小）
+    bubbleInset:     isMobile ? 55 : 110,
+
     scripts: {
       cubismCore: 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js',
       pixiJs:     'https://cdn.jsdelivr.net/npm/pixi.js@6.5.2/dist/browser/pixi.min.js',
@@ -70,24 +75,24 @@
 
   /* ==================== 气泡系统 ==================== */
 
-  let bubble      = null;   // 气泡 DOM 元素
-  let bubbleTimer = null;   // 自动消失定时器
-  let typeTimer   = null;   // 打字机定时器
+  let bubble      = null;
+  let bubbleTimer = null;
+  let typeTimer   = null;
 
   function createBubble() {
-    // 注入气泡样式
+    const bubbleMaxWidth = isMobile ? 140 : 200;
     const style = document.createElement('style');
     style.textContent = `
       #live2d-bubble {
         position: fixed;
         z-index: 149;
-        max-width: 200px;
-        min-width: 100px;
+        max-width: ${bubbleMaxWidth}px;
+        min-width: 80px;
         background: rgba(18, 24, 38, 0.92);
         border: 1px solid rgba(255,255,255,0.12);
         border-radius: 12px;
-        padding: 10px 13px;
-        font-size: 12.5px;
+        padding: ${isMobile ? '7px 10px' : '10px 13px'};
+        font-size: ${isMobile ? '11px' : '12.5px'};
         line-height: 1.65;
         color: rgba(240,244,255,0.88);
         font-family: 'DM Sans', system-ui, sans-serif;
@@ -104,7 +109,6 @@
         opacity: 1;
         transform: translateY(0) scale(1);
       }
-      /* 右侧小三角尾巴，指向模型 */
       #live2d-bubble::after {
         content: '';
         position: absolute;
@@ -115,7 +119,6 @@
         border-bottom: 6px solid transparent;
         border-left:   7px solid rgba(18,24,38,0.92);
       }
-      /* 三角边框层 */
       #live2d-bubble::before {
         content: '';
         position: absolute;
@@ -126,7 +129,6 @@
         border-bottom: 7px solid transparent;
         border-left:   8px solid rgba(255,255,255,0.12);
       }
-      /* 打字机光标 */
       #live2d-bubble .cursor {
         display: inline-block;
         width: 1.5px;
@@ -146,47 +148,33 @@
     bubble = document.createElement('div');
     bubble.id = 'live2d-bubble';
     document.body.appendChild(bubble);
-    return bubble;
   }
 
-  /**
-   * 定位气泡：出现在挂件左侧，垂直对齐模型下半部分
-   * 因为模型外有大片透明空白，气泡尽量靠近视觉中心
-   */
   function positionBubble() {
-    // 气泡右边缘 = 屏幕右边 + offsetRight + canvasWidth - bubbleInset
-    // bubbleInset 越大，气泡右边缘越靠近画布中心，越接近模型实体
     bubble.style.right  = `${CONFIG.offsetRight + CONFIG.canvasWidth - CONFIG.bubbleInset}px`;
     bubble.style.bottom = `${Math.round(CONFIG.canvasHeight * 0.35)}px`;
   }
 
   function showBubble(text, autoDismiss = 5000) {
     if (!bubble) return;
-
-    // 清除旧定时器
     clearTimeout(bubbleTimer);
     clearTimeout(typeTimer);
 
-    // 重置内容
     bubble.innerHTML = '';
     bubble.classList.remove('visible');
 
-    // 打字机效果
     const cursor = document.createElement('span');
     cursor.className = 'cursor';
 
     let i = 0;
     function typeNext() {
       if (i < text.length) {
-        // 在光标前插入字符
         bubble.insertBefore(document.createTextNode(text[i]), cursor);
         i++;
-        // 中文字符稍慢，标点更慢
         const ch = text[i - 1];
         const delay = /[，。！？、…]/.test(ch) ? 160 : /[\u4e00-\u9fa5]/.test(ch) ? 60 : 40;
         typeTimer = setTimeout(typeNext, delay);
       } else {
-        // 打字完成，光标再停留 1.5s 后隐藏
         setTimeout(() => { cursor.style.display = 'none'; }, 1500);
       }
     }
@@ -194,13 +182,11 @@
     bubble.appendChild(cursor);
     positionBubble();
 
-    // 先让气泡出现，再开始打字
     requestAnimationFrame(() => {
       bubble.classList.add('visible');
       setTimeout(typeNext, 120);
     });
 
-    // 自动消失
     if (autoDismiss > 0) {
       bubbleTimer = setTimeout(hideBubble, autoDismiss + text.length * 60);
     }
@@ -237,32 +223,55 @@
       user-select: none;
     `;
 
+    // 提示文字（桌面hover / 移动端始终微弱显示）
     const hint = document.createElement('div');
-    hint.textContent = '双击隐藏';
+    hint.textContent = isMobile ? '双击隐藏' : '双击隐藏';
     hint.style.cssText = `
       position: absolute;
-      top: 8px; left: 50%;
+      top: 6px; left: 50%;
       transform: translateX(-50%);
-      font-size: 10px;
-      color: rgba(255,255,255,0.22);
+      font-size: 9px;
+      color: rgba(255,255,255,0.18);
       font-family: sans-serif;
       letter-spacing: 0.05em;
       pointer-events: none;
-      opacity: 0;
+      opacity: ${isMobile ? 0.6 : 0};
       transition: opacity 0.3s;
+      white-space: nowrap;
     `;
     wrap.appendChild(hint);
-    wrap.addEventListener('mouseenter', () => hint.style.opacity = '1');
-    wrap.addEventListener('mouseleave', () => hint.style.opacity = '0');
 
+    if (!isMobile) {
+      wrap.addEventListener('mouseenter', () => hint.style.opacity = '1');
+      wrap.addEventListener('mouseleave', () => hint.style.opacity = '0');
+    }
+
+    /* ── 折叠逻辑 ── */
     let collapsed = false;
-    wrap.addEventListener('dblclick', () => {
+
+    function toggleCollapse() {
       collapsed = !collapsed;
       wrap.style.transform = collapsed
-        ? `translateY(${CONFIG.canvasHeight - 24}px)` : 'translateY(0)';
-      wrap.style.opacity = collapsed ? '0.25' : '1';
+        ? `translateY(${CONFIG.canvasHeight - 20}px)` : 'translateY(0)';
+      wrap.style.opacity = collapsed ? '0.2' : '1';
       if (collapsed) hideBubble();
-    });
+    }
+
+    // 桌面：原生 dblclick
+    wrap.addEventListener('dblclick', toggleCollapse);
+
+    // 移动端：300ms 内两次 touchend = 双击
+    if (isMobile) {
+      let lastTap = 0;
+      wrap.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTap < 300) {
+          e.preventDefault();
+          toggleCollapse();
+        }
+        lastTap = now;
+      }, { passive: false });
+    }
 
     document.body.appendChild(wrap);
     return wrap;
@@ -271,7 +280,7 @@
   /* ==================== 主逻辑 ==================== */
 
   async function init() {
-    log('初始化开始');
+    log(`初始化（${isMobile ? '移动端' : '桌面端'}，画布 ${CONFIG.canvasWidth}×${CONFIG.canvasHeight}）`);
 
     try {
       await loadScript(CONFIG.scripts.cubismCore);
@@ -296,7 +305,10 @@
       autoDensity:     true,
     });
     wrap.appendChild(app.view);
-    app.view.style.cssText = 'display:block;width:100%;height:100%;';
+
+    // 关键：允许触摸事件中的垂直滚动穿透画布
+    // pan-y = 浏览器处理垂直滑动，canvas 只处理点击
+    app.view.style.cssText = 'display:block;width:100%;height:100%;touch-action:pan-y;';
 
     log(`加载模型：${CONFIG.modelUrl}`);
     let model;
@@ -353,7 +365,7 @@
       model.once('ready', playIdleLoop);
     }
 
-    // 视线跟随
+    // 视线跟随（mousemove 桌面 / touchmove 移动）
     document.addEventListener('mousemove', (e) => {
       const fc = model.internalModel.focusController;
       if (!fc) return;
@@ -370,9 +382,11 @@
       fc.targetY = -((t.clientY / window.innerHeight)  * 2 - 1) * CONFIG.focusSensitivity;
     }, { passive: true });
 
-    // 点击：触发随机动作 + 显示随机对话
-    app.view.addEventListener('pointerdown', (e) => {
-      // 阻止双击折叠时误触
+    // 点击/单击：随机动作 + 随机气泡
+    // 移动端用 touchend 区分单击（非双击判定窗口）
+    let tapTimer = null;
+
+    function handleTap(e) {
       e.stopPropagation();
 
       // 随机动作（非 Idle 组）
@@ -388,11 +402,27 @@
         }
       } catch (_) {}
 
-      // 随机对话气泡
       showRandomMsg();
-    });
+    }
 
-    // 欢迎词：模型就绪后 800ms 显示，让用户先看到模型
+    if (isMobile) {
+      // 移动端：touchend 延迟 320ms 触发，避免和双击冲突
+      let touchStartTime = 0;
+      app.view.addEventListener('touchstart', () => {
+        touchStartTime = Date.now();
+      }, { passive: true });
+
+      app.view.addEventListener('touchend', (e) => {
+        // 长按不触发（> 500ms）
+        if (Date.now() - touchStartTime > 500) return;
+        clearTimeout(tapTimer);
+        tapTimer = setTimeout(() => handleTap(e), 320);
+      }, { passive: true });
+    } else {
+      app.view.addEventListener('pointerdown', handleTap);
+    }
+
+    // 欢迎词
     setTimeout(() => showBubble(WELCOME_MSG, 6000), 800);
 
     log('初始化完成 ✓');
