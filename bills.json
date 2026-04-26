@@ -27,5 +27,20 @@
     "paid_by_role": "班长",
     "confirmed": false,
     "confirmed_by": ""
+  },
+  {
+    "id": "T20260426-003",
+    "type": "expense",
+    "title": "校运会班级报销",
+    "date": "2023-10-18",
+    "amount": 230,
+    "tags": [
+      "校运会"
+    ],
+    "note": "补给以及服装",
+    "linked_activity": "大一上泰州校运会",
+    "paid_by_role": "体委",
+    "confirmed": false,
+    "confirmed_by": ""
   }
 ]
