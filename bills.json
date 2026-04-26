@@ -72,5 +72,20 @@
     "paid_by_role": "班长",
     "confirmed": false,
     "confirmed_by": ""
+  },
+  {
+    "id": "T20260426-006",
+    "type": "expense",
+    "title": "团日活动报销",
+    "date": "2024-10-07",
+    "amount": 166.83,
+    "tags": [
+      "团日活动"
+    ],
+    "note": "",
+    "linked_activity": "团日活动",
+    "paid_by_role": "团委书记",
+    "confirmed": false,
+    "confirmed_by": ""
   }
 ]
