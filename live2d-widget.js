@@ -22,6 +22,12 @@
     scaleFactor:     0.95,
     idleMotionGroup: 'Idle',
     focusSensitivity: 0.75,
+
+    // 气泡右边缘侵入画布的像素数
+    // 增大 → 气泡向右移（更靠近模型实体）
+    // 减小 → 气泡向左移（远离画布）
+    // 建议范围：60–180，根据你模型两侧透明空白宽度调整
+    bubbleInset: 110,
     scripts: {
       cubismCore: 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js',
       pixiJs:     'https://cdn.jsdelivr.net/npm/pixi.js@6.5.2/dist/browser/pixi.min.js',
@@ -148,13 +154,9 @@
    * 因为模型外有大片透明空白，气泡尽量靠近视觉中心
    */
   function positionBubble() {
-    const wrapRight  = CONFIG.offsetRight + CONFIG.canvasWidth;
-    const gap        = -100; // 气泡与挂件的间距
-    const bubbleW    = parseInt(bubble.style.maxWidth) || 200;
-
-    // 气泡右边缘 = 挂件左边缘 - gap
-    bubble.style.right  = `${wrapRight + gap}px`;
-    // 垂直位置：距底部约 canvasHeight * 0.35，贴近模型视觉重心
+    // 气泡右边缘 = 屏幕右边 + offsetRight + canvasWidth - bubbleInset
+    // bubbleInset 越大，气泡右边缘越靠近画布中心，越接近模型实体
+    bubble.style.right  = `${CONFIG.offsetRight + CONFIG.canvasWidth - CONFIG.bubbleInset}px`;
     bubble.style.bottom = `${Math.round(CONFIG.canvasHeight * 0.35)}px`;
   }
 
