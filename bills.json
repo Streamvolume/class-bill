@@ -1,17 +1,1 @@
-[
-  {
-    "id": "T20260426-001",
-    "type": "expense",
-    "title": "1",
-    "date": "2026-04-26",
-    "amount": 1,
-    "tags": [
-      "1"
-    ],
-    "note": "1",
-    "linked_activity": "1",
-    "paid_by_role": "1",
-    "confirmed": true,
-    "confirmed_by": "班委核实"
-  }
-]
+[]
