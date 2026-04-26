@@ -102,5 +102,20 @@
     "paid_by_role": "班长",
     "confirmed": false,
     "confirmed_by": ""
+  },
+  {
+    "id": "T20260426-008",
+    "type": "expense",
+    "title": "劳动教育集体活动物料报销",
+    "date": "2024-11-11",
+    "amount": 71.19,
+    "tags": [
+      "报销"
+    ],
+    "note": "",
+    "linked_activity": "劳动教育集体活动",
+    "paid_by_role": "劳动委员",
+    "confirmed": false,
+    "confirmed_by": ""
   }
 ]
