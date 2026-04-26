@@ -227,21 +227,23 @@
     }
 
     // 7. 鼠标/触摸视线跟随
-    //    pixi-live2d-display 的 focus(x, y) 接受屏幕绝对坐标
+    //    直接操作 focusController，传归一化坐标 [-1, 1]
+    //    以全屏范围映射，确保鼠标移到屏幕边缘时眼睛才到极限位置
     function handlePointerMove(e) {
       const x = e.clientX ?? e.touches?.[0]?.clientX;
       const y = e.clientY ?? e.touches?.[0]?.clientY;
       if (x === undefined || y === undefined) return;
 
-      // 根据灵敏度对焦点做插值（让视线跟随更自然）
-      const rect = app.view.getBoundingClientRect();
-      const cx   = rect.left + rect.width  / 2;
-      const cy   = rect.top  + rect.height / 2;
+      // 归一化：屏幕中心 = (0, 0)，右/下 = 正值
+      const normalX =  ((x / window.innerWidth)  * 2 - 1) * CONFIG.focusSensitivity;
+      const normalY = -((y / window.innerHeight) * 2 - 1) * CONFIG.focusSensitivity;
 
-      const focusX = cx + (x - cx) * CONFIG.focusSensitivity;
-      const focusY = cy + (y - cy) * CONFIG.focusSensitivity;
-
-      model.focus(focusX, focusY);
+      // 直接写入 focusController，跳过 model.focus() 的坐标系转换
+      const fc = model.internalModel.focusController;
+      if (fc) {
+        fc.targetX = normalX;
+        fc.targetY = normalY;
+      }
     }
 
     document.addEventListener('mousemove',  handlePointerMove, { passive: true });
