@@ -149,7 +149,7 @@
    */
   function positionBubble() {
     const wrapRight  = CONFIG.offsetRight + CONFIG.canvasWidth;
-    const gap        = 12; // 气泡与挂件的间距
+    const gap        = -12; // 气泡与挂件的间距
     const bubbleW    = parseInt(bubble.style.maxWidth) || 200;
 
     // 气泡右边缘 = 挂件左边缘 - gap
