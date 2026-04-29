@@ -40,8 +40,8 @@
     "note": "补给以及服装",
     "linked_activity": "大一上泰州校运会",
     "paid_by_role": "体委",
-    "confirmed": false,
-    "confirmed_by": ""
+    "confirmed": true,
+    "confirmed_by": "班委核实"
   },
   {
     "id": "T20260426-004",
