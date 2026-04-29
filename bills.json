@@ -25,8 +25,8 @@
     "note": "具体时间点待补正",
     "linked_activity": "大一上团建",
     "paid_by_role": "班长",
-    "confirmed": false,
-    "confirmed_by": ""
+    "confirmed": true,
+    "confirmed_by": "班委核实"
   },
   {
     "id": "T20260426-003",
